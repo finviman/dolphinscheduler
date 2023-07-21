@@ -2931,7 +2931,7 @@ public class ProcessServiceImpl implements ProcessService {
      * @param taskId task id
      */
     @Override
-    public boolean acquireTaskGroup(int taskId, String taskName, int groupId, int processId, int priority) {
+    public synchronized boolean acquireTaskGroup(int taskId, String taskName, int groupId, int processId, int priority) {
         TaskGroup taskGroup = taskGroupMapper.selectById(groupId);
         if (taskGroup == null) {
             // we don't throw exception here, to avoid the task group has been deleted during workflow running
