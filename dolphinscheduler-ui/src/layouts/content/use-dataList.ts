@@ -53,6 +53,34 @@ import { useRoute } from 'vue-router'
 import { useUserStore } from '@/store/user/user'
 import { timezoneList } from '@/common/timezone'
 import type { UserInfoRes } from '@/service/modules/users/types'
+import { queryProjectByCode } from '@/service/modules/projects'
+import { queryAllProjectList } from '@/service/modules/projects'
+
+function getName(code: number){
+  if (code>0){
+    queryProjectByCode(code).then((res:any)=>{
+      const nodes = document.querySelectorAll('.n-menu-item-content-header');
+      const menus = Array.from(nodes) as HTMLElement[];
+      menus[7].innerText = "项目："+res.name
+    })
+  }
+}
+
+//construct project list node.
+function listProjects(menuItem: any){
+  queryAllProjectList().then((pros:any[])=>{
+    let projects : any[] = []
+    pros.forEach(project => {
+      projects.push(
+          {
+            label: project.name,
+            key: `/projects/${project.code}`,
+          }
+      )
+    })
+    menuItem.menuOptions[1].children[0].children = projects
+  })
+}
 
 export function useDataList() {
   const { t } = useI18n()
@@ -89,6 +117,7 @@ export function useDataList() {
 
   const changeMenuOption = (state: any) => {
     const projectCode = route.params.projectCode || ''
+    getName(+projectCode)
     state.menuOptions = [
       {
         label: () => h(NEllipsis, null, { default: () => t('menu.home') }),
@@ -102,8 +131,10 @@ export function useDataList() {
         children: [
           {
             label: t('menu.project_overview'),
-            key: `/projects/${projectCode}`,
-            icon: renderIcon(FundProjectionScreenOutlined)
+            key: `project`,
+            //icon: renderIcon(FundProjectionScreenOutlined),
+            icon: renderIcon(FundProjectionScreenOutlined),
+            children: []
           },
           {
             label: t('menu.workflow'),
@@ -316,6 +347,7 @@ export function useDataList() {
               ]
       }
     ]
+    listProjects(state)
   }
 
   const changeHeaderMenuOptions = (state: any) => {
