@@ -49,6 +49,9 @@ public class WorkerGroup {
     @TableField(exist = false)
     private boolean systemDefault;
 
+    @TableField(exist = false)
+    private String projectList = "";
+
     private String otherParamsJson;
 
 }

@@ -37,6 +37,7 @@ interface WorkerGroupItem {
   addrList: string
   createTime: string
   updateTime: string
+  projectList: string
   systemDefault: boolean
 }
 

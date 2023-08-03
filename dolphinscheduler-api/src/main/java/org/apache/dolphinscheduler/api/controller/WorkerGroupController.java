@@ -27,11 +27,13 @@ import org.apache.dolphinscheduler.api.exceptions.ApiException;
 import org.apache.dolphinscheduler.api.service.WorkerGroupService;
 import org.apache.dolphinscheduler.api.utils.Result;
 import org.apache.dolphinscheduler.common.constants.Constants;
+import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.dao.entity.User;
 import org.apache.dolphinscheduler.plugin.task.api.utils.ParameterUtils;
 
 import springfox.documentation.annotations.ApiIgnore;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,11 +75,11 @@ public class WorkerGroupController extends BaseController {
      */
     @ApiOperation(value = "saveWorkerGroup", notes = "CREATE_WORKER_GROUP_NOTES")
     @ApiImplicitParams({
-        @ApiImplicitParam(name = "id", value = "WORKER_GROUP_ID", dataType = "Int", example = "10", defaultValue = "0"),
-        @ApiImplicitParam(name = "name", value = "WORKER_GROUP_NAME", required = true, dataType = "String"),
-        @ApiImplicitParam(name = "addrList", value = "WORKER_ADDR_LIST", required = true, dataType = "String"),
-        @ApiImplicitParam(name = "description", value = "WORKER_DESC", required = false, dataType = "String"),
-        @ApiImplicitParam(name = "otherParamsJson", value = "WORKER_PARMS_JSON", required = false, dataType = "String"),
+            @ApiImplicitParam(name = "id", value = "WORKER_GROUP_ID", dataType = "Int", example = "10", defaultValue = "0"),
+            @ApiImplicitParam(name = "name", value = "WORKER_GROUP_NAME", required = true, dataType = "String"),
+            @ApiImplicitParam(name = "addrList", value = "WORKER_ADDR_LIST", required = true, dataType = "String"),
+            @ApiImplicitParam(name = "description", value = "WORKER_DESC", required = false, dataType = "String"),
+            @ApiImplicitParam(name = "otherParamsJson", value = "WORKER_PARMS_JSON", required = false, dataType = "String"),
     })
     @PostMapping()
     @ResponseStatus(HttpStatus.OK)
@@ -87,10 +89,15 @@ public class WorkerGroupController extends BaseController {
                                   @RequestParam(value = "id", required = false, defaultValue = "0") int id,
                                   @RequestParam(value = "name") String name,
                                   @RequestParam(value = "addrList") String addrList,
-                                  @RequestParam(value = "description",required = false, defaultValue = "") String description,
-                                  @RequestParam(value = "otherParamsJson",required = false, defaultValue = "") String otherParamsJson
-    ) {
-        Map<String, Object> result = workerGroupService.saveWorkerGroup(loginUser, id, name, addrList, description, otherParamsJson);
+                                  @RequestParam(value = "description", required = false, defaultValue = "") String description,
+                                  @RequestParam(value = "projectList", required = false, defaultValue = "") String projectList,
+                                  @RequestParam(value = "otherParamsJson", required = false, defaultValue = "") String otherParamsJson) {
+        String[] projects = projectList.split(",");
+        Map<String, String[]> forjson = new HashMap<>();
+        forjson.put("projects", projects);
+        otherParamsJson = JSONUtils.toJsonString(forjson);
+        Map<String, Object> result =
+                workerGroupService.saveWorkerGroup(loginUser, id, name, addrList, description, otherParamsJson);
         return returnDataList(result);
     }
 
@@ -140,6 +147,23 @@ public class WorkerGroupController extends BaseController {
     @AccessLogAnnotation(ignoreRequestArgs = "loginUser")
     public Result queryAllWorkerGroups(@ApiIgnore @RequestAttribute(value = Constants.SESSION_USER) User loginUser) {
         Map<String, Object> result = workerGroupService.queryAllGroup(loginUser);
+        return returnDataList(result);
+    }
+
+    /**
+     * query all worker groups
+     *
+     * @param loginUser login user
+     * @return all worker group list
+     */
+    @ApiOperation(value = "queryAllWorkerGroups", notes = "QUERY_WORKER_GROUP_LIST_NOTES")
+    @GetMapping(value = "/all_of_this_project")
+    @ResponseStatus(HttpStatus.OK)
+    @ApiException(QUERY_WORKER_GROUP_FAIL)
+    @AccessLogAnnotation(ignoreRequestArgs = "loginUser")
+    public Result queryProjectWorkerGroups(@ApiIgnore @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
+                                           Long projectCode) {
+        Map<String, Object> result = workerGroupService.queryProjectGroup(loginUser, projectCode);
         return returnDataList(result);
     }
 

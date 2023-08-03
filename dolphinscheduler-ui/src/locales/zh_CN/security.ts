@@ -62,9 +62,12 @@ export default {
     group_name: '分组名称',
     group_name_tips: '请输入分组名称',
     worker_addresses: 'Worker地址',
+    worker_projects: 'Worker所属项目',
     worker_addresses_tips: '请选择Worker地址',
+    worker_projects_tips: '请选择Worker归属项目',
     create_time: '创建时间',
-    update_time: '更新时间'
+    update_time: '更新时间',
+    relate_projects: '归属项目',
   },
   yarn_queue: {
     create_queue: '创建队列',

@@ -53,8 +53,7 @@ import { useRoute } from 'vue-router'
 import { useUserStore } from '@/store/user/user'
 import { timezoneList } from '@/common/timezone'
 import type { UserInfoRes } from '@/service/modules/users/types'
-import { queryProjectByCode } from '@/service/modules/projects'
-import { queryAllProjectList } from '@/service/modules/projects'
+import { queryProjectByCode,queryCreatedAndAuthedProjectList } from '@/service/modules/projects'
 
 function getName(code: number){
   if (code>0){
@@ -67,9 +66,9 @@ function getName(code: number){
 }
 
 //construct project list node.
-function listProjects(menuItem: any){
-  queryAllProjectList().then((pros:any[])=>{
-    let projects : any[] = []
+function listProjects(menuItem: any) {
+  queryCreatedAndAuthedProjectList().then((pros: any[]) => {
+    let projects: any[] = []
     pros.forEach(project => {
       projects.push(
           {

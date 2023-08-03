@@ -28,12 +28,15 @@ import org.apache.dolphinscheduler.common.constants.Constants;
 import org.apache.dolphinscheduler.common.enums.AuthorizationType;
 import org.apache.dolphinscheduler.common.enums.NodeType;
 import org.apache.dolphinscheduler.common.enums.UserType;
+import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.dao.entity.EnvironmentWorkerGroupRelation;
 import org.apache.dolphinscheduler.dao.entity.ProcessInstance;
+import org.apache.dolphinscheduler.dao.entity.Project;
 import org.apache.dolphinscheduler.dao.entity.User;
 import org.apache.dolphinscheduler.dao.entity.WorkerGroup;
 import org.apache.dolphinscheduler.dao.mapper.EnvironmentWorkerGroupRelationMapper;
 import org.apache.dolphinscheduler.dao.mapper.ProcessInstanceMapper;
+import org.apache.dolphinscheduler.dao.mapper.ProjectMapper;
 import org.apache.dolphinscheduler.dao.mapper.WorkerGroupMapper;
 import org.apache.dolphinscheduler.service.registry.RegistryClient;
 
@@ -58,6 +61,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.facebook.presto.jdbc.internal.guava.base.Strings;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * worker group service impl
@@ -78,6 +83,9 @@ public class WorkerGroupServiceImpl extends BaseServiceImpl implements WorkerGro
 
     @Autowired
     private EnvironmentWorkerGroupRelationMapper environmentWorkerGroupRelationMapper;
+
+    @Autowired
+    private ProjectMapper projectMapper;
 
     /**
      * create or update a worker group
@@ -114,6 +122,7 @@ public class WorkerGroupServiceImpl extends BaseServiceImpl implements WorkerGro
         workerGroup.setAddrList(addrList);
         workerGroup.setUpdateTime(now);
         workerGroup.setDescription(description);
+        workerGroup.setOtherParamsJson(otherParamsJson);
 
         if (checkWorkerGroupNameExists(workerGroup)) {
             putMsg(result, Status.NAME_EXIST, workerGroup.getName());
@@ -267,6 +276,36 @@ public class WorkerGroupServiceImpl extends BaseServiceImpl implements WorkerGro
     }
 
     /**
+     * query all worker group
+     *
+     * @param loginUser
+     * @return all worker group list
+     */
+    @Override
+    public Map<String, Object> queryProjectGroup(User loginUser, Long projectCode) {
+        Map<String, Object> result = new HashMap<>();
+        List<WorkerGroup> workerGroups;
+        if (loginUser.getUserType().equals(UserType.ADMIN_USER)) {
+            workerGroups = getWorkerGroups(null);
+        } else {
+            Set<Integer> ids = resourcePermissionCheckService
+                    .userOwnedResourceIdsAcquisition(AuthorizationType.WORKER_GROUP, loginUser.getId(), logger);
+            workerGroups = getWorkerGroups(ids.isEmpty() ? Collections.emptyList() : new ArrayList<>(ids));
+        }
+        Project project = projectMapper.queryByCode(projectCode);
+        if (project == null) {
+            return new HashMap<>();
+        }
+        List<String> availableWorkerGroupList =
+                workerGroups.stream().filter(x -> x.getProjectList().contains(project.getName()))
+                        .map(WorkerGroup::getName)
+                        .collect(Collectors.toList());
+        result.put(Constants.DATA_LIST, availableWorkerGroupList);
+        putMsg(result, Status.SUCCESS);
+        return result;
+    }
+
+    /**
      * get worker groups
      *
      * @return WorkerGroup list
@@ -279,7 +318,17 @@ public class WorkerGroupServiceImpl extends BaseServiceImpl implements WorkerGro
         } else {
             workerGroups = workerGroupMapper.queryAllWorkerGroup();
         }
-
+        workerGroups.forEach(x -> {
+            ObjectNode jsonNode = JSONUtils.parseObject(x.getOtherParamsJson());
+            JsonNode projects = jsonNode.get("projects");
+            List<String> pro = new ArrayList<>();
+            if (projects.isArray()) {
+                for (JsonNode objNode : projects) {
+                    pro.add(objNode.asText());
+                }
+            }
+            x.setProjectList(String.join(",", pro));
+        });
         Optional<Boolean> containDefaultWorkerGroups = workerGroups.stream()
                 .map(workerGroup -> Constants.DEFAULT_WORKER_GROUP.equals(workerGroup.getName())).findAny();
         if (!containDefaultWorkerGroups.isPresent() || !containDefaultWorkerGroups.get()) {
@@ -317,7 +366,8 @@ public class WorkerGroupServiceImpl extends BaseServiceImpl implements WorkerGro
             return result;
         }
         List<ProcessInstance> processInstances = processInstanceMapper
-                .queryByWorkerGroupNameAndStatus(workerGroup.getName(), org.apache.dolphinscheduler.service.utils.Constants.NOT_TERMINATED_STATES);
+                .queryByWorkerGroupNameAndStatus(workerGroup.getName(),
+                        org.apache.dolphinscheduler.service.utils.Constants.NOT_TERMINATED_STATES);
         if (CollectionUtils.isNotEmpty(processInstances)) {
             List<Integer> processInstanceIds =
                     processInstances.stream().map(ProcessInstance::getId).collect(Collectors.toList());

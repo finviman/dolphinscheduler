@@ -41,6 +41,14 @@ export function queryAllWorkerGroups(): any {
   })
 }
 
+export function queryProjectWorkerGroups(projectCode: number): any {
+  return axios({
+    url: '/worker-groups/all_of_this_project',
+    method: 'get',
+    params: {projectCode:projectCode}
+  })
+}
+
 export function queryWorkerAddressList(): any {
   return axios({
     url: '/worker-groups/worker-address-list',

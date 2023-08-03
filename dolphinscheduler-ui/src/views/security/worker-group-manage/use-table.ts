@@ -15,19 +15,13 @@
  * limitations under the License.
  */
 
-import { useAsyncState } from '@vueuse/core'
-import { reactive, h, ref } from 'vue'
-import { NButton, NIcon, NPopconfirm, NSpace, NTag, NTooltip } from 'naive-ui'
-import { useI18n } from 'vue-i18n'
-import { DeleteOutlined, EditOutlined } from '@vicons/antd'
-import {
-  queryAllWorkerGroupsPaging,
-  deleteById
-} from '@/service/modules/worker-groups'
-import type {
-  WorkerGroupRes,
-  WorkerGroupItem
-} from '@/service/modules/worker-groups/types'
+import {useAsyncState} from '@vueuse/core'
+import {h, reactive, ref} from 'vue'
+import {NButton, NIcon, NPopconfirm, NSpace, NTag, NTooltip} from 'naive-ui'
+import {useI18n} from 'vue-i18n'
+import {DeleteOutlined, EditOutlined} from '@vicons/antd'
+import {deleteById, queryAllWorkerGroupsPaging} from '@/service/modules/worker-groups'
+import type {WorkerGroupItem, WorkerGroupRes} from '@/service/modules/worker-groups/types'
 
 export function useTable() {
   const { t } = useI18n()
@@ -74,6 +68,23 @@ export function useTable() {
       {
         title: t('security.worker_group.update_time'),
         key: 'updateTime'
+      },
+      {
+          title: t('security.worker_group.relate_projects'),
+          key: 'projectList',
+          render: (row: WorkerGroupItem) =>
+              h(NSpace, null, {
+                  default: () =>
+                      row.projectList
+                          .split(',')
+                          .map((item: string) =>
+                              h(
+                                  NTag,
+                                  { type: 'success', size: 'small' },
+                                  { default: () => item }
+                              )
+                          )
+              })
       },
       {
         title: t('security.worker_group.operation'),

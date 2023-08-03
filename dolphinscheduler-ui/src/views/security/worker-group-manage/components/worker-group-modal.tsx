@@ -52,6 +52,7 @@ const WorkerGroupModal = defineComponent({
       if (props.statusRef === 0) {
         variables.model.name = ''
         variables.model.addrList = []
+        variables.model.projectList = []
       }
       ctx.emit('cancelModal', props.showModalRef)
     }
@@ -75,10 +76,12 @@ const WorkerGroupModal = defineComponent({
         if (props.statusRef === 0) {
           variables.model.name = ''
           variables.model.addrList = []
+          variables.model.projectList = []
         } else {
           variables.model.id = props.row.id
           variables.model.name = props.row.name
           variables.model.addrList = props.row.addrList.split(',')
+          variables.model.projectList = props.row.projectList.split(',')
         }
       }
     )
@@ -89,6 +92,7 @@ const WorkerGroupModal = defineComponent({
         variables.model.id = props.row.id
         variables.model.name = props.row.name
         variables.model.addrList = props.row.addrList.split(',')
+        variables.model.projectList = props.row.projectList.split(',')
       }
     )
 
@@ -142,6 +146,20 @@ const WorkerGroupModal = defineComponent({
                     )}
                     options={this.model.generalOptions}
                     v-model={[this.model.addrList, 'value']}
+                  />
+                </NFormItem>
+                <NFormItem
+                    label={t('security.worker_group.worker_projects')}
+                    path='addrList'
+                >
+                  <NSelect
+                      class='select-worker-address'
+                      multiple
+                      placeholder={t(
+                          'security.worker_group.worker_projects_tips'
+                      )}
+                      options={this.model.projectsOptions}
+                      v-model={[this.model.projectList, 'value']}
                   />
                 </NFormItem>
               </NForm>

@@ -23,6 +23,10 @@ import {
   saveWorkerGroup
 } from '@/service/modules/worker-groups'
 
+import {
+  queryAllProjectList
+} from '@/service/modules/projects'
+
 export function useModal(
   props: any,
   ctx: SetupContext<('cancelModal' | 'confirmModal')[]>
@@ -35,7 +39,9 @@ export function useModal(
       id: ref<number>(-1),
       name: ref(''),
       addrList: ref<Array<number>>([]),
-      generalOptions: []
+      projectList: ref<Array<string>>([]),
+      generalOptions: [],
+      projectsOptions: []
     },
     saving: false,
     rules: {
@@ -75,7 +81,21 @@ export function useModal(
       {}
     )
 
-    return state
+    const project = useAsyncState(
+        queryAllProjectList().then((res: Array<any>) => {
+          variables.model.projectsOptions = res.map(
+              (item): { label: string; value: string } => {
+                return {
+                  label: item.name,
+                  value: item.name
+                }
+              }
+          ) as any
+        }),
+        {}
+    )
+
+    return state && project.state
   }
 
   const handleValidate = async (statusRef: number) => {
@@ -98,12 +118,14 @@ export function useModal(
   const submitWorkerGroupModal = () => {
     const data = {
       name: variables.model.name,
-      addrList: variables.model.addrList.toString()
+      addrList: variables.model.addrList.toString(),
+      projectList: variables.model.projectList.toString()
     }
 
     saveWorkerGroup(data).then(() => {
       variables.model.name = ''
       variables.model.addrList = []
+      variables.model.projectList = []
       ctx.emit('confirmModal', props.showModalRef)
     })
   }
@@ -112,7 +134,8 @@ export function useModal(
     const data = {
       id: variables.model.id,
       name: variables.model.name,
-      addrList: variables.model.addrList.toString()
+      addrList: variables.model.addrList.toString(),
+      projectList: variables.model.projectList.toString()
     }
 
     saveWorkerGroup(data).then(() => {

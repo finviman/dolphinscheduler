@@ -62,9 +62,12 @@ export default {
     group_name: 'Group Name',
     group_name_tips: 'Please enter your group name',
     worker_addresses: 'Worker Addresses',
+    worker_projects: 'Worker Projects',
     worker_addresses_tips: 'Please select worker addresses',
+    worker_projects_tips: 'Please select worker projects',
     create_time: 'Create Time',
-    update_time: 'Update Time'
+    update_time: 'Update Time',
+    relate_projects: 'Related projects'
   },
   yarn_queue: {
     create_queue: 'Create Queue',

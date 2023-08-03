@@ -21,7 +21,7 @@ import { reactive, ref, SetupContext } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { queryProcessDefinitionByCode } from '@/service/modules/process-definition'
-import { queryAllWorkerGroups } from '@/service/modules/worker-groups'
+import { queryProjectWorkerGroups } from '@/service/modules/worker-groups'
 import { queryAllEnvironmentList } from '@/service/modules/environment'
 import { listAlertGroupById } from '@/service/modules/alert-group'
 import type { EnvironmentItem } from '@/service/modules/environment/types'
@@ -59,7 +59,7 @@ export const useStart = (
   }
 
   const getWorkerGroups = () => {
-    queryAllWorkerGroups().then((res: any) => {
+    queryProjectWorkerGroups(Number(route.params.projectCode)).then((res: any) => {
       variables.startState.workerGroups = res.map((item: string) => ({
         label: item,
         value: item

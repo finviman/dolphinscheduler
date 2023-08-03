@@ -56,6 +56,13 @@ export function queryAllProjectList(): any {
   })
 }
 
+export function queryCreatedAndAuthedProjectList(): any {
+  return axios({
+    url: '/projects/all-you-can-see-projects',
+    method: 'get'
+  })
+}
+
 export function queryUnauthorizedProject(params: UserIdReq): any {
   return axios({
     url: '/projects/unauth-project',

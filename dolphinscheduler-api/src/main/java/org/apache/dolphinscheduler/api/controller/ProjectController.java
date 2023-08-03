@@ -32,11 +32,16 @@ import org.apache.dolphinscheduler.api.exceptions.ApiException;
 import org.apache.dolphinscheduler.api.service.ProjectService;
 import org.apache.dolphinscheduler.api.utils.Result;
 import org.apache.dolphinscheduler.common.constants.Constants;
+import org.apache.dolphinscheduler.dao.entity.Project;
 import org.apache.dolphinscheduler.dao.entity.User;
 import org.apache.dolphinscheduler.plugin.task.api.utils.ParameterUtils;
-import org.apache.dolphinscheduler.dao.entity.User;
 
 import springfox.documentation.annotations.ApiIgnore;
+
+import org.apache.commons.collections4.CollectionUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -229,6 +234,37 @@ public class ProjectController extends BaseController {
     public Result queryAuthorizedProject(@ApiIgnore @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
                                          @RequestParam("userId") Integer userId) {
         return projectService.queryAuthorizedProject(loginUser, userId);
+    }
+
+    /**
+     * query authorized project
+     *
+     * @param loginUser login user
+     * @return projects which the user have permission to see, Except for items created by this user
+     */
+    @ApiOperation(value = "queryCreatedAndAuthedProjectList", notes = "QUERY_ALL_CREATED_AUTHORIZED_PROJECT_NOTES")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "userId", value = "USER_ID", dataTypeClass = int.class, example = "100")
+    })
+    @GetMapping(value = "/all-you-can-see-projects")
+    @ResponseStatus(HttpStatus.OK)
+    @ApiException(QUERY_AUTHORIZED_PROJECT)
+    @AccessLogAnnotation(ignoreRequestArgs = "loginUser")
+    public Result queryCreatedAndAuthedProjectList(@ApiIgnore @RequestAttribute(value = Constants.SESSION_USER) User loginUser) {
+
+        Result resultAuthed = projectService.queryAuthorizedProject(loginUser, loginUser.getId());
+        Result mycreated = projectService.queryAllProjectList(loginUser);
+        List<Project> my = (List<Project>) mycreated.getData();
+        List<Project> auth = (List<Project>) resultAuthed.getData();
+        List<Project> all = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(my)) {
+            all.addAll(my);
+        }
+        if (CollectionUtils.isNotEmpty(auth)) {
+            all.addAll(auth);
+        }
+        mycreated.setData(all);
+        return mycreated;
     }
 
     /**
